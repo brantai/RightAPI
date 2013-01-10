@@ -37,97 +37,102 @@
 #
 
 
-require 'rubygems'  if VERSION < "1.9.0"  # not required if ruby >= 1.9
+require 'rubygems'  if RUBY_VERSION < "1.9.0"  # not required if ruby >= 1.9
 
 class RightAPI
-	
-require 'rest_client'
+  
+  require 'rest_client'
 
-@apiobject = Object.new
-@apiheader = {}
-@resid
-@puts_exceptions = true
-@reraise_exceptions = false
+  @apiobject = Object.new
+  @apiheader = {}
+  @resid
+  @puts_exceptions = true
+  @reraise_exceptions = false
 
-attr_accessor :api_version, :log, :debug, :api_url, :log_file, :puts_exceptions, :reraise_exceptions
+  attr_accessor :api_version, :log, :debug, :api_url, :log_file, :puts_exceptions, :reraise_exceptions
 
-	def initialize
+  def initialize
 
-	@api_version = '1.0' if @api_version.nil? 	# Change default API version
-	@log_file_default = "rest.log"
-	@api_url = "https://my.rightscale.com/api/acct/" if @api_url.nil?
+    @api_version = '1.0' if @api_version.nil? 	# Change default API version
+    @log_file_default = "rest.log"
+    @api_url = "https://my.rightscale.com/api/acct/" if @api_url.nil?
 
-	end
-	
-	def	login(opts={})
-		puts "Debug mode on\n\n" if @debug
-		
-		@username = opts[:username]
-		@password = opts[:password]
-		@account =  opts[:account] 
+  end
+  
+  def login(opts={})
+    puts "Debug mode on\n\n" if @debug
+    
+    @username = opts[:username]
+    @password = opts[:password]
+    @account =  opts[:account] 
 
-		@api_call = "#{@api_url}#{@account}"
-		unless @log.nil?
-			puts "logging=#{@log}" if @debug
-			puts "log_file=#{@log_file}" if @debug
-			@log_file == nil ? RestClient.log = "#{@log_file_default}" : RestClient.log = "#{@log_file}"
-		end
-		@apiobject = RestClient::Resource.new("#{@api_call}",@username,@password)
-		rescue => e
-		puts "Error: #{e.message}" if @puts_exceptions
-		raise if @reraise_exceptions
-	end
+    @api_call = "#{@api_url}#{@account}"
+    unless @log.nil?
+      puts "logging=#{@log}" if @debug
+      puts "log_file=#{@log_file}" if @debug
+      @log_file == nil ? RestClient.log = "#{@log_file_default}" : RestClient.log = "#{@log_file}"
+    end
+    @apiobject = RestClient::Resource.new("#{@api_call}",@username,@password)
+  rescue => e
+    puts "Error: #{e.message}" if @puts_exceptions
+    raise if @reraise_exceptions
+  end
 
-	def	send(apistring,type = "get", params = {})
-		@responsecode = ""
-		api_version= { :x_api_version => "#{@api_version}", :api_version => "#{@api_version}" }	
+  def send(apistring, type="get", params={})
+    @responsecode = ""
+    api_version= { :x_api_version => "#{@api_version}", :api_version => "#{@api_version}" }	
 
-		raise "No API call given" if apistring.empty?
-		raise "Invalid Action: get | put | post | delete only" unless type.match(/(get|post|put|delete)/)
-	
-		@callstart = Time.now	
-    		@reply = @apiobject[apistring].send(type.to_sym, api_version.merge(params)) 
-		@time = Time.now - @callstart 
+    raise "No API call given" if apistring.empty?
+    raise "Invalid Action: get | put | post | delete only" unless type.match(/(get|post|put|delete)/)
 
-		@apiheader = @reply.headers
-		@resid = @apiheader[:location].match(/\d+$/) if @apiheader[:status].downcase.match(/201 created/)
-	
-		# Return results	
-		@reply.body
+    @callstart = Time.now	
 
-		rescue
-		@responsecode = $!
-		puts "Error: #{$!}"	if @puts_exceptions
-		raise if @reraise_exceptions
+    case type
+    when 'get','delete','head','options' then
+      @reply = @apiobject[apistring].send(type.to_sym, api_version.merge(params[:headers] || {})) 
+    else
+      @reply = @apiobject[apistring].send(type.to_sym, params[:payload], api_version.merge(params[:headers] || {})) 
+    end
+    
+    @time = Time.now - @callstart 
+    
+    @apiheader = @reply.headers
+    @resid = @apiheader[:location].match(/\d+$/) if @apiheader[:status].to_s.match(/^201/)
+    
+    # Return results	
+    @reply.body
+  rescue
+    @responsecode = $!
+    puts "Error: #{$!}"	if @puts_exceptions
+    raise if @reraise_exceptions
+  end
 
-	end
+  # Returns the resource id of the created object
+  def resourceid
+    @resid
+  end
 
-	# Returns the resource id of the created object
-	def	resourceid
-		@resid
-	end
+  # Show existing api connection string
+  def show_connection
+    puts @apiobject.inspect
+  end
 
-	# Show existing api connection string
-	def 	show_connection
-		puts @apiobject.inspect
-	end
+  # Returns length of time api call took 
+  def time
+    @time.to_f
+  end
 
-	# Returns length of time api call took 
-	def	time
-		@time.to_f
-	end
+  # returns hash of http headers returned
+  def headers
+    @apiheader
+  end
+  
+  # Return xml of matching names
+  def search(name="")
+    self.send("servers?filter=nickname=#{name}")
+  end
 
-	# returns hash of http headers returned
-	def 	headers
-		@apiheader
-	end
-	
- 	# Return xml of matching names
-	def	search(name="")
-		self.send("servers?filter=nickname=#{name}")
-	end
-
-	def	code
-		@responsecode
-	end	
+  def code
+    @responsecode
+  end	
 end
