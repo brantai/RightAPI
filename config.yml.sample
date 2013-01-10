@@ -1,0 +1,6 @@
+:account_id: i123456 
+:email: 'your@email.com'
+:password: 'secret'
+:server_nickname: 'server'
+:script_name: 'script'
+:project_directory: 'text:Something'
