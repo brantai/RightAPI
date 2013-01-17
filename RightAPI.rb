@@ -49,14 +49,13 @@ class RightAPI
   @puts_exceptions = true
   @reraise_exceptions = false
 
-  attr_accessor :api_version, :log, :debug, :api_url, :log_file, :puts_exceptions, :reraise_exceptions
+  attr_accessor :api_version, :log, :debug, :api_url, :log_file, :puts_exceptions, :reraise_exceptions, :authen_cookies
 
   def initialize
-
     @api_version = '1.0' if @api_version.nil? 	# Change default API version
     @log_file_default = "rest.log"
     @api_url = "https://my.rightscale.com/api/acct/" if @api_url.nil?
-
+    @authen_cookies = {}
   end
   
   def login(opts={})
@@ -80,8 +79,12 @@ class RightAPI
 
   def send(apistring, type="get", params={})
     @responsecode = ""
-    api_version= { :x_api_version => "#{@api_version}", :api_version => "#{@api_version}" }	
-
+    send_headers = { 
+      :x_api_version => "#{@api_version}", 
+      :api_version => "#{@api_version}", 
+      :cookies => @authen_cookies,
+    }
+    
     raise "No API call given" if apistring.empty?
     raise "Invalid Action: get | put | post | delete only" unless type.match(/(get|post|put|delete)/)
 
@@ -89,9 +92,9 @@ class RightAPI
 
     case type
     when 'get','delete','head','options' then
-      @reply = @apiobject[apistring].send(type.to_sym, api_version.merge(params[:headers] || {})) 
+      @reply = @apiobject[apistring].send(type.to_sym, send_headers.merge(params[:headers] || {})) 
     else
-      @reply = @apiobject[apistring].send(type.to_sym, params[:payload], api_version.merge(params[:headers] || {})) 
+      @reply = @apiobject[apistring].send(type.to_sym, params[:payload], send_headers.merge(params[:headers] || {})) 
     end
     
     @time = Time.now - @callstart 
