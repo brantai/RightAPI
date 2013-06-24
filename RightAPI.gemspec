@@ -8,5 +8,6 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/cheempz/RightAPI"
   s.files = ["lib/RightAPI.rb"]
   s.has_rdoc = false
+  s.add_runtime_dependency "rest-client"
   s.description = "A generic API wrapper to interface with the RightScale Cloud Computing API."
 end
