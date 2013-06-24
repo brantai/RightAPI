@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.authors = ["Robert Carr"]
   s.email = "robert@rightscale.com"
   s.summary = "Ruby wrapper around rightscales rest interface"
-  s.homepage = "https://github.com/cheempz/RightAPI"
+  s.homepage = "https://github.com/brantai/RightAPI"
   s.files = ["lib/RightAPI.rb"]
   s.has_rdoc = false
   s.add_runtime_dependency "rest-client"
