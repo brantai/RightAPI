@@ -54,7 +54,7 @@ class RightAPI
   def initialize
     @api_version = '1.0' if @api_version.nil? 	# Change default API version
     @log_file_default = "rest.log"
-#    @api_url = "https://my.rightscale.com/api/acct/" if @api_url.nil?
+    @api_url = "https://my.rightscale.com/api/acct/" if @api_url.nil?
     @authen_cookies = {}
   end
   
@@ -64,7 +64,7 @@ class RightAPI
     @username = opts[:username]
     @password = opts[:password]
     @account =  opts[:account] 
-    @account =  opts[:api_url]
+    @api_url =  opts[:api_url]
     @api_call = "#{@api_url}#{@account}"
     unless @log.nil?
       puts "logging=#{@log}" if @debug
