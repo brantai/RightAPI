@@ -4,3 +4,4 @@
 :server_nickname: 'server'
 :script_name: 'script'
 :project_directory: 'text:Something'
+:api_url: 'https://us-1.rightscale.com/api/acct/"
